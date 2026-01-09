@@ -145,7 +145,10 @@ export default function StoresPage() {
     if (error) {
       toast.error('Failed to fetch stores');
     } else {
-      setStores(data || []);
+      setStores((data || []).map(store => ({
+        ...store,
+        metadata: (store.metadata || {}) as Record<string, unknown>,
+      })));
     }
     setIsLoading(false);
   };
@@ -236,100 +239,99 @@ export default function StoresPage() {
       <PageHeader
         title="Stores"
         description="Connect and manage your e-commerce stores across platforms"
-        actions={
-          canOperate && (
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="glow">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Connect Store
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-lg">
-                <DialogHeader>
-                  <DialogTitle>Connect a Store</DialogTitle>
-                  <DialogDescription>
-                    Choose a platform and enter your credentials to connect your store
-                  </DialogDescription>
-                </DialogHeader>
-                
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label>Platform</Label>
-                    <Select value={selectedPlatform} onValueChange={handlePlatformChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a platform" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(PLATFORM_INFO).map(([key, info]) => (
-                          <SelectItem key={key} value={key}>
-                            <span className="flex items-center gap-2">
-                              <span>{info.icon}</span>
-                              <span>{info.name}</span>
-                            </span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+      >
+        {canOperate && (
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="glow">
+                <Plus className="w-4 h-4 mr-2" />
+                Connect Store
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Connect a Store</DialogTitle>
+                <DialogDescription>
+                  Choose a platform and enter your credentials to connect your store
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Platform</Label>
+                  <Select value={selectedPlatform} onValueChange={handlePlatformChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a platform" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(PLATFORM_INFO).map(([key, info]) => (
+                        <SelectItem key={key} value={key}>
+                          <span className="flex items-center gap-2">
+                            <span>{info.icon}</span>
+                            <span>{info.name}</span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                  {selectedPlatform && (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Store Name *</Label>
+                {selectedPlatform && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Store Name *</Label>
+                      <Input
+                        id="name"
+                        placeholder="My Store"
+                        value={formData.name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      />
+                    </div>
+
+                    {PLATFORM_INFO[selectedPlatform].fields.map((field) => (
+                      <div key={field.key} className="space-y-2">
+                        <Label htmlFor={field.key}>
+                          {field.label} {field.required && '*'}
+                        </Label>
                         <Input
-                          id="name"
-                          placeholder="My Store"
-                          value={formData.name}
-                          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                          id={field.key}
+                          type={field.type}
+                          placeholder={field.label}
+                          value={formData[field.key] || ''}
+                          onChange={(e) => setFormData(prev => ({ ...prev, [field.key]: e.target.value }))}
                         />
                       </div>
+                    ))}
 
-                      {PLATFORM_INFO[selectedPlatform].fields.map((field) => (
-                        <div key={field.key} className="space-y-2">
-                          <Label htmlFor={field.key}>
-                            {field.label} {field.required && '*'}
-                          </Label>
-                          <Input
-                            id={field.key}
-                            type={field.type}
-                            placeholder={field.label}
-                            value={formData[field.key] || ''}
-                            onChange={(e) => setFormData(prev => ({ ...prev, [field.key]: e.target.value }))}
-                          />
-                        </div>
-                      ))}
-
-                      {selectedPlatform === 'amazon_kdp' && (
-                        <div className="p-3 rounded-lg bg-warning/10 border border-warning/20">
-                          <div className="flex items-start gap-2">
-                            <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
-                            <div className="text-sm">
-                              <p className="font-medium text-warning">Manual Integration Required</p>
-                              <p className="text-muted-foreground mt-1">
-                                Amazon KDP doesn't provide an API. Publishing will require manual steps with approval gates.
-                              </p>
-                            </div>
+                    {selectedPlatform === 'amazon_kdp' && (
+                      <div className="p-3 rounded-lg bg-warning/10 border border-warning/20">
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
+                          <div className="text-sm">
+                            <p className="font-medium text-warning">Manual Integration Required</p>
+                            <p className="text-muted-foreground mt-1">
+                              Amazon KDP doesn't provide an API. Publishing will require manual steps with approval gates.
+                            </p>
                           </div>
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      <Button
-                        variant="glow"
-                        className="w-full"
-                        onClick={handleSaveStore}
-                        disabled={isSaving}
-                      >
-                        {isSaving ? 'Connecting...' : 'Connect Store'}
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </DialogContent>
-            </Dialog>
-          )
-        }
-      />
+                    <Button
+                      variant="glow"
+                      className="w-full"
+                      onClick={handleSaveStore}
+                      disabled={isSaving}
+                    >
+                      {isSaving ? 'Connecting...' : 'Connect Store'}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+      </PageHeader>
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -366,7 +368,7 @@ export default function StoresPage() {
           {stores.map((store) => {
             const platformInfo = getPlatformInfo(store.platform);
             return (
-              <Card key={store.id} variant={store.is_active ? 'default' : 'muted'}>
+              <Card key={store.id} className={!store.is_active ? 'opacity-60' : ''}>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">

@@ -107,7 +107,11 @@ export default function ProductsPage() {
 
     const productsWithVariants = productsData?.map(product => ({
       ...product,
-      variants: variantsData?.filter(v => v.product_id === product.id) || [],
+      metadata: (product.metadata || {}) as Record<string, unknown>,
+      variants: (variantsData?.filter(v => v.product_id === product.id) || []).map(v => ({
+        ...v,
+        attributes: (v.attributes || {}) as Record<string, unknown>,
+      })),
     })) || [];
 
     setProducts(productsWithVariants);
@@ -276,146 +280,145 @@ export default function ProductsPage() {
       <PageHeader
         title="Products"
         description="Manage your product catalog and variants"
-        actions={
-          canOperate && (
-            <Dialog open={dialogOpen} onOpenChange={(open) => {
-              setDialogOpen(open);
-              if (!open) resetForm();
-            }}>
-              <DialogTrigger asChild>
-                <Button variant="glow">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Product
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingProduct ? 'Edit Product' : 'Add New Product'}
-                  </DialogTitle>
-                  <DialogDescription>
-                    {editingProduct 
-                      ? 'Update product details and variants' 
-                      : 'Create a new product with variants'}
-                  </DialogDescription>
-                </DialogHeader>
-                
-                <div className="space-y-6 py-4">
-                  {/* Basic Info */}
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="title">Product Title *</Label>
-                      <Input
-                        id="title"
-                        placeholder="Premium T-Shirt"
-                        value={formData.title}
-                        onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea
-                        id="description"
-                        placeholder="Describe your product..."
-                        value={formData.description}
-                        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                        rows={3}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="sku">SKU</Label>
-                      <Input
-                        id="sku"
-                        placeholder="PROD-001"
-                        value={formData.sku}
-                        onChange={(e) => setFormData(prev => ({ ...prev, sku: e.target.value }))}
-                      />
-                    </div>
+      >
+        {canOperate && (
+          <Dialog open={dialogOpen} onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) resetForm();
+          }}>
+            <DialogTrigger asChild>
+              <Button variant="glow">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Product
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingProduct ? 'Edit Product' : 'Add New Product'}
+                </DialogTitle>
+                <DialogDescription>
+                  {editingProduct 
+                    ? 'Update product details and variants' 
+                    : 'Create a new product with variants'}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-6 py-4">
+                {/* Basic Info */}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Product Title *</Label>
+                    <Input
+                      id="title"
+                      placeholder="Premium T-Shirt"
+                      value={formData.title}
+                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    />
                   </div>
 
-                  {/* Variants */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label>Variants</Label>
-                      <Button type="button" variant="outline" size="sm" onClick={addVariant}>
-                        <Plus className="w-3 h-3 mr-1" />
-                        Add Variant
-                      </Button>
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      placeholder="Describe your product..."
+                      value={formData.description}
+                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                      rows={3}
+                    />
+                  </div>
 
-                    <div className="space-y-3">
-                      {variants.map((variant, index) => (
-                        <div key={index} className="p-3 rounded-lg bg-secondary/30 border border-border">
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <div className="space-y-1">
-                              <Label className="text-xs">Title</Label>
-                              <Input
-                                placeholder="Size/Color"
-                                value={variant.title || ''}
-                                onChange={(e) => updateVariant(index, 'title', e.target.value)}
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs">SKU</Label>
-                              <Input
-                                placeholder="VAR-001"
-                                value={variant.sku || ''}
-                                onChange={(e) => updateVariant(index, 'sku', e.target.value)}
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs">Price</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="sku">SKU</Label>
+                    <Input
+                      id="sku"
+                      placeholder="PROD-001"
+                      value={formData.sku}
+                      onChange={(e) => setFormData(prev => ({ ...prev, sku: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                {/* Variants */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label>Variants</Label>
+                    <Button type="button" variant="outline" size="sm" onClick={addVariant}>
+                      <Plus className="w-3 h-3 mr-1" />
+                      Add Variant
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {variants.map((variant, index) => (
+                      <div key={index} className="p-3 rounded-lg bg-secondary/30 border border-border">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Title</Label>
+                            <Input
+                              placeholder="Size/Color"
+                              value={variant.title || ''}
+                              onChange={(e) => updateVariant(index, 'title', e.target.value)}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">SKU</Label>
+                            <Input
+                              placeholder="VAR-001"
+                              value={variant.sku || ''}
+                              onChange={(e) => updateVariant(index, 'sku', e.target.value)}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Price</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="0.00"
+                              value={variant.price ?? ''}
+                              onChange={(e) => updateVariant(index, 'price', parseFloat(e.target.value) || null)}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Inventory</Label>
+                            <div className="flex gap-2">
                               <Input
                                 type="number"
-                                step="0.01"
-                                placeholder="0.00"
-                                value={variant.price ?? ''}
-                                onChange={(e) => updateVariant(index, 'price', parseFloat(e.target.value) || null)}
+                                placeholder="0"
+                                value={variant.inventory_quantity || 0}
+                                onChange={(e) => updateVariant(index, 'inventory_quantity', parseInt(e.target.value) || 0)}
                               />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs">Inventory</Label>
-                              <div className="flex gap-2">
-                                <Input
-                                  type="number"
-                                  placeholder="0"
-                                  value={variant.inventory_quantity || 0}
-                                  onChange={(e) => updateVariant(index, 'inventory_quantity', parseInt(e.target.value) || 0)}
-                                />
-                                {variants.length > 1 && (
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => removeVariant(index)}
-                                  >
-                                    <Trash2 className="w-4 h-4 text-destructive" />
-                                  </Button>
-                                )}
-                              </div>
+                              {variants.length > 1 && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => removeVariant(index)}
+                                >
+                                  <Trash2 className="w-4 h-4 text-destructive" />
+                                </Button>
+                              )}
                             </div>
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
-
-                  <Button
-                    variant="glow"
-                    className="w-full"
-                    onClick={handleSaveProduct}
-                    disabled={isSaving}
-                  >
-                    {isSaving ? 'Saving...' : editingProduct ? 'Update Product' : 'Create Product'}
-                  </Button>
                 </div>
-              </DialogContent>
-            </Dialog>
-          )
-        }
-      />
+
+                <Button
+                  variant="glow"
+                  className="w-full"
+                  onClick={handleSaveProduct}
+                  disabled={isSaving}
+                >
+                  {isSaving ? 'Saving...' : editingProduct ? 'Update Product' : 'Create Product'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+      </PageHeader>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
