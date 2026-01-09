@@ -10,12 +10,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { JsonSchemaForm } from '@/components/settings/JsonSchemaForm';
 import { SettingsHistory } from '@/components/settings/SettingsHistory';
 import { SampleSettingsSeeder } from '@/components/settings/SampleSettingsSeeder';
+import { SettingsExportImport } from '@/components/settings/SettingsExportImport';
+import { SettingsComparison } from '@/components/settings/SettingsComparison';
+import { SettingsApproval } from '@/components/settings/SettingsApproval';
 import { toast } from 'sonner';
-import { Building2, Store, Puzzle, Globe, History } from 'lucide-react';
+import { Building2, Store, Puzzle, Globe, History, FileJson, GitCompare, ShieldCheck } from 'lucide-react';
 import type { Json } from '@/integrations/supabase/types';
 
 type SettingsScope = 'global' | 'org' | 'store' | 'plugin_instance';
-type TabValue = SettingsScope | 'history';
+type TabValue = SettingsScope | 'history' | 'export' | 'compare' | 'approvals';
 
 interface SettingsDefinition {
   id: string;
@@ -201,14 +204,14 @@ export default function SettingsPage() {
       />
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)}>
-        <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 lg:w-auto lg:inline-grid">
           <TabsTrigger value="global" className="gap-2">
             <Globe className="h-4 w-4" />
             <span className="hidden sm:inline">Global</span>
           </TabsTrigger>
           <TabsTrigger value="org" className="gap-2">
             <Building2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Organization</span>
+            <span className="hidden sm:inline">Org</span>
           </TabsTrigger>
           <TabsTrigger value="store" className="gap-2">
             <Store className="h-4 w-4" />
@@ -217,6 +220,18 @@ export default function SettingsPage() {
           <TabsTrigger value="plugin_instance" className="gap-2">
             <Puzzle className="h-4 w-4" />
             <span className="hidden sm:inline">Plugin</span>
+          </TabsTrigger>
+          <TabsTrigger value="compare" className="gap-2">
+            <GitCompare className="h-4 w-4" />
+            <span className="hidden sm:inline">Compare</span>
+          </TabsTrigger>
+          <TabsTrigger value="approvals" className="gap-2">
+            <ShieldCheck className="h-4 w-4" />
+            <span className="hidden sm:inline">Approvals</span>
+          </TabsTrigger>
+          <TabsTrigger value="export" className="gap-2">
+            <FileJson className="h-4 w-4" />
+            <span className="hidden sm:inline">Export</span>
           </TabsTrigger>
           <TabsTrigger value="history" className="gap-2">
             <History className="h-4 w-4" />
@@ -321,6 +336,21 @@ export default function SettingsPage() {
         {/* History Tab */}
         <TabsContent value="history" className="space-y-6">
           <SettingsHistory />
+        </TabsContent>
+
+        {/* Compare Tab */}
+        <TabsContent value="compare" className="space-y-6">
+          <SettingsComparison />
+        </TabsContent>
+
+        {/* Approvals Tab */}
+        <TabsContent value="approvals" className="space-y-6">
+          <SettingsApproval />
+        </TabsContent>
+
+        {/* Export/Import Tab */}
+        <TabsContent value="export" className="space-y-6">
+          <SettingsExportImport />
         </TabsContent>
 
         {/* Sample Seeder - shown when no definitions exist */}
