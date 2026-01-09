@@ -14,6 +14,7 @@ import AuditPage from "./pages/AuditPage";
 import StoresPage from "./pages/StoresPage";
 import ProductsPage from "./pages/ProductsPage";
 import PublishPage from "./pages/PublishPage";
+import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,7 +37,7 @@ const App = () => (
               <Route path="plugins" element={<PluginsPage />} />
               <Route path="products" element={<ProductsPage />} />
               <Route path="publish" element={<PublishPage />} />
-              <Route path="settings" element={<DashboardPage />} />
+              <Route path="settings" element={<SettingsPage />} />
               <Route path="audit" element={<AuditPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
