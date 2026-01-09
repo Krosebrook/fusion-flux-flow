@@ -15,7 +15,9 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Loader2, HelpCircle, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface JsonSchemaProperty {
   type: string;
@@ -29,6 +31,7 @@ interface JsonSchemaProperty {
   maxLength?: number;
   pattern?: string;
   format?: string;
+  help?: string;
 }
 
 interface JsonSchema {
@@ -59,18 +62,18 @@ function jsonSchemaToZod(schema: JsonSchema): z.ZodType {
     switch (prop.type) {
       case 'string':
         let stringSchema = z.string();
-        if (prop.minLength) stringSchema = stringSchema.min(prop.minLength);
-        if (prop.maxLength) stringSchema = stringSchema.max(prop.maxLength);
-        if (prop.pattern) stringSchema = stringSchema.regex(new RegExp(prop.pattern));
-        if (prop.format === 'email') stringSchema = stringSchema.email();
-        if (prop.format === 'uri' || prop.format === 'url') stringSchema = stringSchema.url();
+        if (prop.minLength) stringSchema = stringSchema.min(prop.minLength, `Must be at least ${prop.minLength} characters`);
+        if (prop.maxLength) stringSchema = stringSchema.max(prop.maxLength, `Must be at most ${prop.maxLength} characters`);
+        if (prop.pattern) stringSchema = stringSchema.regex(new RegExp(prop.pattern), 'Invalid format');
+        if (prop.format === 'email') stringSchema = stringSchema.email('Must be a valid email');
+        if (prop.format === 'uri' || prop.format === 'url') stringSchema = stringSchema.url('Must be a valid URL');
         fieldSchema = stringSchema;
         break;
       case 'number':
       case 'integer':
-        let numberSchema = z.number();
-        if (prop.minimum !== undefined) numberSchema = numberSchema.min(prop.minimum);
-        if (prop.maximum !== undefined) numberSchema = numberSchema.max(prop.maximum);
+        let numberSchema = z.number({ invalid_type_error: 'Must be a number' });
+        if (prop.minimum !== undefined) numberSchema = numberSchema.min(prop.minimum, `Must be at least ${prop.minimum}`);
+        if (prop.maximum !== undefined) numberSchema = numberSchema.max(prop.maximum, `Must be at most ${prop.maximum}`);
         fieldSchema = numberSchema;
         break;
       case 'boolean':
@@ -134,6 +137,7 @@ export function JsonSchemaForm({ schema, defaultValues, onSubmit, isLoading }: J
   const form = useForm({
     resolver: zodResolver(zodSchema),
     defaultValues: formDefaults,
+    mode: 'onChange',
   });
 
   const handleSubmit = async (values: Record<string, unknown>) => {
@@ -149,42 +153,88 @@ export function JsonSchemaForm({ schema, defaultValues, onSubmit, isLoading }: J
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {Object.entries(schema.properties).map(([key, prop]) => (
-          <FormField
-            key={key}
-            control={form.control}
-            name={key}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{prop.title || key}</FormLabel>
-                <FormControl>
-                  {renderFieldInput(prop, field)}
-                </FormControl>
-                {prop.description && (
-                  <FormDescription>{prop.description}</FormDescription>
-                )}
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        ))}
-        <Button type="submit" disabled={isLoading}>
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Save Settings
-        </Button>
-      </form>
-    </Form>
+    <TooltipProvider>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          {Object.entries(schema.properties).map(([key, prop]) => (
+            <FormField
+              key={key}
+              control={form.control}
+              name={key}
+              render={({ field, fieldState }) => (
+                <FormItem className={cn(
+                  "transition-all duration-200",
+                  fieldState.error && "animate-shake"
+                )}>
+                  <div className="flex items-center gap-2">
+                    <FormLabel className={cn(
+                      fieldState.error && "text-destructive"
+                    )}>
+                      {prop.title || key}
+                      {schema.required?.includes(key) && (
+                        <span className="text-destructive ml-1">*</span>
+                      )}
+                    </FormLabel>
+                    {(prop.help || prop.description) && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="max-w-xs">
+                          <p className="text-sm">{prop.help || prop.description}</p>
+                          {prop.minimum !== undefined && (
+                            <p className="text-xs text-muted-foreground mt-1">Min: {prop.minimum}</p>
+                          )}
+                          {prop.maximum !== undefined && (
+                            <p className="text-xs text-muted-foreground">Max: {prop.maximum}</p>
+                          )}
+                          {prop.pattern && (
+                            <p className="text-xs text-muted-foreground">Pattern: {prop.pattern}</p>
+                          )}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
+                  <FormControl>
+                    <div className="relative">
+                      {renderFieldInput(prop, field, fieldState.error)}
+                      {fieldState.error && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                          <AlertCircle className="h-4 w-4 text-destructive" />
+                        </div>
+                      )}
+                    </div>
+                  </FormControl>
+                  {prop.description && !prop.help && (
+                    <FormDescription>{prop.description}</FormDescription>
+                  )}
+                  <FormMessage className="flex items-center gap-1 text-sm animate-fade-in" />
+                </FormItem>
+              )}
+            />
+          ))}
+          <Button type="submit" disabled={isLoading || !form.formState.isValid}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Settings
+          </Button>
+        </form>
+      </Form>
+    </TooltipProvider>
   );
 }
 
-function renderFieldInput(prop: JsonSchemaProperty, field: { value: unknown; onChange: (value: unknown) => void; onBlur: () => void; name: string }) {
+function renderFieldInput(
+  prop: JsonSchemaProperty, 
+  field: { value: unknown; onChange: (value: unknown) => void; onBlur: () => void; name: string },
+  error?: { message?: string }
+) {
+  const errorClass = error ? 'border-destructive focus-visible:ring-destructive pr-10' : '';
+  
   // Enum (select)
   if (prop.enum && prop.enum.length > 0) {
     return (
       <Select value={String(field.value || '')} onValueChange={field.onChange}>
-        <SelectTrigger>
+        <SelectTrigger className={cn(errorClass)}>
           <SelectValue placeholder={`Select ${prop.title || field.name}`} />
         </SelectTrigger>
         <SelectContent>
@@ -218,6 +268,7 @@ function renderFieldInput(prop: JsonSchemaProperty, field: { value: unknown; onC
         min={prop.minimum}
         max={prop.maximum}
         step={prop.type === 'integer' ? 1 : 'any'}
+        className={cn(errorClass)}
       />
     );
   }
@@ -229,6 +280,7 @@ function renderFieldInput(prop: JsonSchemaProperty, field: { value: unknown; onC
         value={String(field.value || '')}
         onChange={(e) => field.onChange(e.target.value)}
         maxLength={prop.maxLength}
+        className={cn(errorClass)}
       />
     );
   }
@@ -240,6 +292,8 @@ function renderFieldInput(prop: JsonSchemaProperty, field: { value: unknown; onC
       value={String(field.value || '')}
       onChange={(e) => field.onChange(e.target.value)}
       maxLength={prop.maxLength}
+      placeholder={prop.default ? String(prop.default) : undefined}
+      className={cn(errorClass)}
     />
   );
 }
