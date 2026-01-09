@@ -8,11 +8,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { JsonSchemaForm } from '@/components/settings/JsonSchemaForm';
+import { SettingsHistory } from '@/components/settings/SettingsHistory';
+import { SampleSettingsSeeder } from '@/components/settings/SampleSettingsSeeder';
 import { toast } from 'sonner';
-import { Building2, Store, Puzzle, Globe } from 'lucide-react';
+import { Building2, Store, Puzzle, Globe, History } from 'lucide-react';
 import type { Json } from '@/integrations/supabase/types';
 
 type SettingsScope = 'global' | 'org' | 'store' | 'plugin_instance';
+type TabValue = SettingsScope | 'history';
 
 interface SettingsDefinition {
   id: string;
@@ -35,7 +38,7 @@ interface SettingsValue {
 export default function SettingsPage() {
   const { currentOrg } = useAuthContext();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<SettingsScope>('org');
+  const [activeTab, setActiveTab] = useState<TabValue>('org');
   const [selectedStoreId, setSelectedStoreId] = useState<string>('');
   const [selectedPluginInstanceId, setSelectedPluginInstanceId] = useState<string>('');
 
@@ -197,8 +200,8 @@ export default function SettingsPage() {
         description="Configure your organization, stores, and plugins with versioned settings"
       />
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as SettingsScope)}>
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)}>
+        <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
           <TabsTrigger value="global" className="gap-2">
             <Globe className="h-4 w-4" />
             <span className="hidden sm:inline">Global</span>
@@ -214,6 +217,10 @@ export default function SettingsPage() {
           <TabsTrigger value="plugin_instance" className="gap-2">
             <Puzzle className="h-4 w-4" />
             <span className="hidden sm:inline">Plugin</span>
+          </TabsTrigger>
+          <TabsTrigger value="history" className="gap-2">
+            <History className="h-4 w-4" />
+            <span className="hidden sm:inline">History</span>
           </TabsTrigger>
         </TabsList>
 
@@ -310,6 +317,18 @@ export default function SettingsPage() {
             />
           )}
         </TabsContent>
+
+        {/* History Tab */}
+        <TabsContent value="history" className="space-y-6">
+          <SettingsHistory />
+        </TabsContent>
+
+        {/* Sample Seeder - shown when no definitions exist */}
+        {(!definitions || definitions.length === 0) && !loadingDefinitions && (
+          <div className="mt-6">
+            <SampleSettingsSeeder />
+          </div>
+        )}
       </Tabs>
     </div>
   );
