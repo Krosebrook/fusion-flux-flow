@@ -11,6 +11,9 @@ import PluginsPage from "./pages/PluginsPage";
 import JobsPage from "./pages/JobsPage";
 import ApprovalsPage from "./pages/ApprovalsPage";
 import AuditPage from "./pages/AuditPage";
+import StoresPage from "./pages/StoresPage";
+import ProductsPage from "./pages/ProductsPage";
+import PublishPage from "./pages/PublishPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,10 +32,10 @@ const App = () => (
               <Route path="dashboard" element={<DashboardPage />} />
               <Route path="approvals" element={<ApprovalsPage />} />
               <Route path="jobs" element={<JobsPage />} />
-              <Route path="stores" element={<DashboardPage />} />
+              <Route path="stores" element={<StoresPage />} />
               <Route path="plugins" element={<PluginsPage />} />
-              <Route path="products" element={<DashboardPage />} />
-              <Route path="publish" element={<DashboardPage />} />
+              <Route path="products" element={<ProductsPage />} />
+              <Route path="publish" element={<PublishPage />} />
               <Route path="settings" element={<DashboardPage />} />
               <Route path="audit" element={<AuditPage />} />
             </Route>
