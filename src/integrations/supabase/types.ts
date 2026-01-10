@@ -847,6 +847,10 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      create_org_with_owner: {
+        Args: { org_name: string; org_slug: string }
+        Returns: string
+      }
       get_org_role: {
         Args: { org_id_param: string }
         Returns: Database["public"]["Enums"]["org_role"]

@@ -135,28 +135,17 @@ export function useAuth() {
   const createOrg = async (name: string, slug: string) => {
     if (!state.user) return { error: new Error('Not authenticated') };
 
-    const { data: org, error: orgError } = await supabase
-      .from('orgs')
-      .insert({ name, slug })
-      .select()
-      .single();
+    // Use the SECURITY DEFINER function to atomically create org and add owner
+    const { data, error } = await supabase.rpc('create_org_with_owner', {
+      org_name: name,
+      org_slug: slug,
+    });
 
-    if (orgError) return { error: orgError };
-
-    // Add user as owner
-    const { error: memberError } = await supabase
-      .from('org_members')
-      .insert({
-        org_id: org.id,
-        user_id: state.user.id,
-        role: 'owner',
-      });
-
-    if (memberError) return { error: memberError };
+    if (error) return { error };
 
     // Refresh orgs
     await fetchUserData(state.user.id);
-    return { data: org, error: null };
+    return { data: { id: data }, error: null };
   };
 
   return {
