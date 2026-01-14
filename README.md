@@ -10,12 +10,15 @@
 
 ## 📖 Documentation
 
-**For new team members and contributors, start here:**
+**📊 START HERE: [EXECUTIVE_SUMMARY.md](./EXECUTIVE_SUMMARY.md)** - 5-minute overview for decision makers
+
+**For new team members and contributors:**
 
 - 📋 **[AUDIT_AND_ROADMAP.md](./AUDIT_AND_ROADMAP.md)** - Comprehensive audit and 3-month product roadmap
 - 🚀 **[QUICK_START_GUIDE.md](./QUICK_START_GUIDE.md)** - Quick start guide for developers
 - 🔒 **[SECURITY.md](./SECURITY.md)** - Security recommendations and implementation guide
 - ✅ **[DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** - Production deployment checklist
+- 🤝 **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Contribution guidelines and code standards
 
 ---
 
