@@ -464,7 +464,7 @@ describe('formatDate', () => {
 
 **DO NOT** create a public issue for security vulnerabilities.
 
-Instead, email: [security@flashfusion.example.com] (or create private security advisory)
+Instead, use GitHub's [Private Security Advisory](https://github.com/Krosebrook/fusion-flux-flow/security/advisories/new) feature.
 
 Include:
 - Description of vulnerability

@@ -17,7 +17,7 @@ This document outlines security vulnerabilities identified in the FlashFusion co
 
 ### 1. Unencrypted Credential Storage
 
-**Issue**: Store credentials (API keys, tokens, secrets) are stored as plain text in JSONB fields.
+**Issue**: E-commerce store credentials (API keys, tokens, secrets) are stored as plain text in JSONB fields.
 
 **Location**: `stores` table, `credentials` column
 
@@ -246,7 +246,7 @@ FROM stores;
 ```bash
 # Install BFG Repo-Cleaner
 # macOS: brew install bfg
-# Or download from https://reps-cleaner.github.io/bfg-repo-cleaner/
+# Or download from https://rtyley.github.io/bfg-repo-cleaner/
 
 # Backup your repo first!
 cd ..
@@ -388,9 +388,10 @@ export async function checkRateLimit(
 CREATE TABLE rate_limits (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   key TEXT NOT NULL,
-  timestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
-  INDEX idx_rate_limits_key_timestamp ON rate_limits(key, timestamp)
+  timestamp TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE INDEX idx_rate_limits_key_timestamp ON rate_limits(key, timestamp);
 
 -- Clean up old entries periodically
 CREATE OR REPLACE FUNCTION cleanup_rate_limits()
