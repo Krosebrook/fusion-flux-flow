@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PasswordStrengthMeter, isPasswordStrong } from '@/components/auth/PasswordStrengthMeter';
+import { OAuthButtons } from '@/components/auth/OAuthButtons';
 import { toast } from 'sonner';
 import { Zap, Mail, Lock, User, CheckCircle } from 'lucide-react';
 import { z } from 'zod';
@@ -208,6 +209,8 @@ export default function AuthPage() {
               >
                 {isSubmitting ? 'Signing in...' : 'Sign In'}
               </Button>
+
+              <OAuthButtons />
             </TabsContent>
 
             <TabsContent value="signup" className="space-y-4">
@@ -289,6 +292,8 @@ export default function AuthPage() {
               >
                 {isSubmitting ? 'Creating account...' : 'Create Account'}
               </Button>
+
+              <OAuthButtons />
             </TabsContent>
           </Tabs>
         </CardContent>
