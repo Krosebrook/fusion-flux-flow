@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Zap,
+  User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ const navItems = [
   { to: '/publish', icon: Send, label: 'Publishing' },
   { to: '/settings', icon: Settings, label: 'Settings' },
   { to: '/audit', icon: ScrollText, label: 'Audit Log' },
+  { to: '/profile', icon: User, label: 'Profile' },
 ];
 
 export function AppSidebar() {

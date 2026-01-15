@@ -1,26 +1,40 @@
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
+import { PasswordStrengthMeter, isPasswordStrong } from '@/components/auth/PasswordStrengthMeter';
 import { toast } from 'sonner';
-import { Zap, Mail, Lock, User } from 'lucide-react';
+import { Zap, Mail, Lock, User, CheckCircle } from 'lucide-react';
 import { z } from 'zod';
 
-const authSchema = z.object({
+const signInSchema = z.object({
   email: z.string().email('Please enter a valid email'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+const signUpSchema = z.object({
+  email: z.string().email('Please enter a valid email'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string(),
+  fullName: z.string().optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
 export default function AuthPage() {
   const { signIn, signUp, isAuthenticated, isLoading } = useAuthContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    confirmPassword: '',
     fullName: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -37,9 +51,35 @@ export default function AuthPage() {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const validateForm = () => {
+  const validateSignIn = () => {
     try {
-      authSchema.parse(formData);
+      signInSchema.parse(formData);
+      setErrors({});
+      return true;
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        err.errors.forEach((e) => {
+          if (e.path[0]) {
+            newErrors[e.path[0] as string] = e.message;
+          }
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
+  };
+
+  const validateSignUp = () => {
+    try {
+      signUpSchema.parse(formData);
+      
+      // Additional password strength check
+      if (!isPasswordStrong(formData.password)) {
+        setErrors({ password: 'Password does not meet strength requirements' });
+        return false;
+      }
+      
       setErrors({});
       return true;
     } catch (err) {
@@ -57,7 +97,7 @@ export default function AuthPage() {
   };
 
   const handleSignIn = async () => {
-    if (!validateForm()) return;
+    if (!validateSignIn()) return;
     setIsSubmitting(true);
     const { error } = await signIn(formData.email, formData.password);
     setIsSubmitting(false);
@@ -69,7 +109,7 @@ export default function AuthPage() {
   };
 
   const handleSignUp = async () => {
-    if (!validateForm()) return;
+    if (!validateSignUp()) return;
     setIsSubmitting(true);
     const { error } = await signUp(formData.email, formData.password, formData.fullName);
     setIsSubmitting(false);
@@ -83,6 +123,9 @@ export default function AuthPage() {
       toast.success('Account created! You can now sign in.');
     }
   };
+
+  const passwordsMatch = formData.confirmPassword && formData.password === formData.confirmPassword;
+  const passwordsDontMatch = formData.confirmPassword && formData.password !== formData.confirmPassword;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -137,6 +180,26 @@ export default function AuthPage() {
                 </div>
                 {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
               </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="remember-me"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                  />
+                  <Label htmlFor="remember-me" className="text-sm font-normal cursor-pointer">
+                    Remember me
+                  </Label>
+                </div>
+                <Link
+                  to="/forgot-password"
+                  className="text-sm text-primary hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+
               <Button
                 variant="glow"
                 className="w-full mt-6"
@@ -191,6 +254,32 @@ export default function AuthPage() {
                   />
                 </div>
                 {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
+                <PasswordStrengthMeter password={formData.password} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-confirm-password">Confirm Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="signup-confirm-password"
+                    type="password"
+                    placeholder="••••••••"
+                    className="pl-10"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  />
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-xs text-destructive">{errors.confirmPassword}</p>
+                )}
+                {passwordsMatch && (
+                  <p className="text-xs text-success flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" /> Passwords match
+                  </p>
+                )}
+                {passwordsDontMatch && (
+                  <p className="text-xs text-destructive">Passwords do not match</p>
+                )}
               </div>
               <Button
                 variant="glow"
