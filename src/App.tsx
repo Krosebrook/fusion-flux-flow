@@ -26,6 +26,7 @@ const ProductsPage = lazy(() => import("./pages/ProductsPage"));
 const PublishPage = lazy(() => import("./pages/PublishPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const ApiDocsPage = lazy(() => import("./pages/ApiDocsPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Configure React Query with sensible defaults
@@ -167,6 +168,16 @@ const App = () => (
                     <Suspense fallback={<PageLoader message="Loading audit log..." />}>
                       <ErrorBoundary>
                         <AuditPage />
+                      </ErrorBoundary>
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="api-docs"
+                  element={
+                    <Suspense fallback={<PageLoader message="Loading API documentation..." />}>
+                      <ErrorBoundary>
+                        <ApiDocsPage />
                       </ErrorBoundary>
                     </Suspense>
                   }

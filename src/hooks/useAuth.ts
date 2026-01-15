@@ -119,6 +119,16 @@ export function useAuth() {
     return { error };
   };
 
+  const signInWithOAuth = async (provider: 'google') => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+    return { error };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
@@ -152,6 +162,7 @@ export function useAuth() {
     ...state,
     signIn,
     signUp,
+    signInWithOAuth,
     signOut,
     setCurrentOrg,
     createOrg,

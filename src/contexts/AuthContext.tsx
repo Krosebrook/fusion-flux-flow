@@ -14,6 +14,7 @@ interface DevAuthState {
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null }>;
+  signInWithOAuth: (provider: 'google') => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   setCurrentOrg: (org: Org) => void;
   createOrg: (name: string, slug: string) => Promise<{ data?: { id: string }; error: Error | null }>;
@@ -30,6 +31,7 @@ const AuthContext = createContext<AuthContextType | DevAuthState | null>(null);
 const mockAuthFunctions = {
   signIn: async () => ({ error: null }),
   signUp: async () => ({ error: null }),
+  signInWithOAuth: async () => ({ error: null }),
   signOut: async () => {},
   setCurrentOrg: () => {},
   createOrg: async () => ({ data: { id: 'mock-org-id' }, error: null }),
