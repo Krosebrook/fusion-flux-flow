@@ -98,13 +98,83 @@ export default function AuthPage() {
     }
   };
 
+  const getSignInErrorMessage = (error: Error) => {
+    const message = error.message?.toLowerCase() || '';
+    
+    if (message.includes('invalid login credentials') || message.includes('invalid_credentials')) {
+      return {
+        title: 'Invalid credentials',
+        description: 'The email or password you entered is incorrect. Please try again or reset your password.',
+        showResetLink: true,
+      };
+    }
+    if (message.includes('email not confirmed')) {
+      return {
+        title: 'Email not verified',
+        description: 'Please check your inbox and verify your email address before signing in.',
+        showResetLink: false,
+      };
+    }
+    if (message.includes('too many requests') || message.includes('rate limit')) {
+      return {
+        title: 'Too many attempts',
+        description: 'Please wait a few minutes before trying again.',
+        showResetLink: false,
+      };
+    }
+    return {
+      title: 'Sign in failed',
+      description: error.message || 'An unexpected error occurred. Please try again.',
+      showResetLink: false,
+    };
+  };
+
+  const getSignUpErrorMessage = (error: Error) => {
+    const message = error.message?.toLowerCase() || '';
+    
+    if (message.includes('already registered') || message.includes('user_already_exists')) {
+      return {
+        title: 'Account already exists',
+        description: 'This email is already registered. Try signing in instead, or reset your password if you forgot it.',
+        showSignInHint: true,
+      };
+    }
+    if (message.includes('password') && message.includes('weak')) {
+      return {
+        title: 'Password too weak',
+        description: 'Please choose a stronger password with at least 8 characters, including uppercase, lowercase, and numbers.',
+        showSignInHint: false,
+      };
+    }
+    if (message.includes('invalid email')) {
+      return {
+        title: 'Invalid email',
+        description: 'Please enter a valid email address.',
+        showSignInHint: false,
+      };
+    }
+    return {
+      title: 'Sign up failed',
+      description: error.message || 'An unexpected error occurred. Please try again.',
+      showSignInHint: false,
+    };
+  };
+
   const handleSignIn = async () => {
     if (!validateSignIn()) return;
     setIsSubmitting(true);
     const { error } = await signIn(formData.email, formData.password);
     setIsSubmitting(false);
     if (error) {
-      toast.error(error.message || 'Failed to sign in');
+      const errorInfo = getSignInErrorMessage(error);
+      toast.error(errorInfo.title, {
+        description: errorInfo.description,
+        action: errorInfo.showResetLink ? {
+          label: 'Reset Password',
+          onClick: () => window.location.href = '/forgot-password',
+        } : undefined,
+        duration: 6000,
+      });
     } else {
       toast.success('Welcome back!');
     }
@@ -116,13 +186,15 @@ export default function AuthPage() {
     const { error } = await signUp(formData.email, formData.password, formData.fullName);
     setIsSubmitting(false);
     if (error) {
-      if (error.message.includes('already registered')) {
-        toast.error('This email is already registered. Try signing in.');
-      } else {
-        toast.error(error.message || 'Failed to create account');
-      }
+      const errorInfo = getSignUpErrorMessage(error);
+      toast.error(errorInfo.title, {
+        description: errorInfo.description,
+        duration: 6000,
+      });
     } else {
-      toast.success('Account created! You can now sign in.');
+      toast.success('Account created!', {
+        description: 'You can now sign in with your credentials.',
+      });
     }
   };
 
