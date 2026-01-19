@@ -129,6 +129,27 @@ export function useAuth() {
     return { error };
   };
 
+  const signInWithMagicLink = async (email: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+    return { error };
+  };
+
+  const resendVerificationEmail = async (email: string) => {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+      },
+    });
+    return { error };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
@@ -163,6 +184,8 @@ export function useAuth() {
     signIn,
     signUp,
     signInWithOAuth,
+    signInWithMagicLink,
+    resendVerificationEmail,
     signOut,
     setCurrentOrg,
     createOrg,
