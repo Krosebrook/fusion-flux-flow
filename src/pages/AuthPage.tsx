@@ -11,7 +11,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { PasswordStrengthMeter, isPasswordStrong } from '@/components/auth/PasswordStrengthMeter';
 import { OAuthButtons } from '@/components/auth/OAuthButtons';
 import { toast } from 'sonner';
-import { Zap, Mail, Lock, User, CheckCircle } from 'lucide-react';
+import { Zap, Mail, Lock, User, CheckCircle, Wand2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { z } from 'zod';
 
 const signInSchema = z.object({
@@ -30,9 +31,15 @@ const signUpSchema = z.object({
 });
 
 export default function AuthPage() {
-  const { signIn, signUp, isAuthenticated, isLoading } = useAuthContext();
+  const { signIn, signUp, signInWithMagicLink, resendVerificationEmail, isAuthenticated, isLoading } = useAuthContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [showMagicLink, setShowMagicLink] = useState(false);
+  const [magicLinkEmail, setMagicLinkEmail] = useState('');
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [showVerificationReminder, setShowVerificationReminder] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState('');
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -163,10 +170,18 @@ export default function AuthPage() {
   const handleSignIn = async () => {
     if (!validateSignIn()) return;
     setIsSubmitting(true);
+    setShowVerificationReminder(false);
     const { error } = await signIn(formData.email, formData.password);
     setIsSubmitting(false);
     if (error) {
       const errorInfo = getSignInErrorMessage(error);
+      
+      // Show verification reminder for unconfirmed emails
+      if (error.message?.toLowerCase().includes('email not confirmed')) {
+        setUnverifiedEmail(formData.email);
+        setShowVerificationReminder(true);
+      }
+      
       toast.error(errorInfo.title, {
         description: errorInfo.description,
         action: errorInfo.showResetLink ? {
@@ -177,6 +192,42 @@ export default function AuthPage() {
       });
     } else {
       toast.success('Welcome back!');
+    }
+  };
+
+  const handleMagicLink = async () => {
+    if (!magicLinkEmail || !z.string().email().safeParse(magicLinkEmail).success) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    setIsSubmitting(true);
+    const { error } = await signInWithMagicLink(magicLinkEmail);
+    setIsSubmitting(false);
+    if (error) {
+      toast.error('Failed to send magic link', {
+        description: error.message,
+      });
+    } else {
+      setMagicLinkSent(true);
+      toast.success('Magic link sent!', {
+        description: 'Check your email for a sign-in link.',
+      });
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!unverifiedEmail) return;
+    setIsResendingVerification(true);
+    const { error } = await resendVerificationEmail(unverifiedEmail);
+    setIsResendingVerification(false);
+    if (error) {
+      toast.error('Failed to resend verification email', {
+        description: error.message,
+      });
+    } else {
+      toast.success('Verification email sent!', {
+        description: 'Please check your inbox and spam folder.',
+      });
     }
   };
 
@@ -270,14 +321,106 @@ export default function AuthPage() {
                 </Link>
               </div>
 
+              {/* Email Verification Reminder */}
+              {showVerificationReminder && (
+                <Alert className="border-warning/50 bg-warning/10">
+                  <AlertCircle className="h-4 w-4 text-warning" />
+                  <AlertDescription className="text-sm">
+                    <span className="font-medium">Email not verified.</span> Please check your inbox for a verification link.
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 ml-1 text-primary"
+                      onClick={handleResendVerification}
+                      disabled={isResendingVerification}
+                    >
+                      {isResendingVerification ? (
+                        <>
+                          <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        'Resend verification email'
+                      )}
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <Button
                 variant="glow"
-                className="w-full mt-6"
+                className="w-full"
                 onClick={handleSignIn}
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Signing in...' : 'Sign In'}
               </Button>
+
+              {/* Divider */}
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">or</span>
+                </div>
+              </div>
+
+              {/* Magic Link Option */}
+              {!showMagicLink ? (
+                <Button
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={() => setShowMagicLink(true)}
+                >
+                  <Wand2 className="w-4 h-4" />
+                  Sign in with Magic Link
+                </Button>
+              ) : magicLinkSent ? (
+                <Alert className="border-success/50 bg-success/10">
+                  <CheckCircle className="h-4 w-4 text-success" />
+                  <AlertDescription className="text-sm">
+                    <span className="font-medium">Check your email!</span> We sent a magic link to <span className="font-medium">{magicLinkEmail}</span>
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/30">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Wand2 className="w-4 h-4 text-primary" />
+                    Passwordless Sign In
+                  </div>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="email"
+                      placeholder="Enter your email"
+                      className="pl-10"
+                      value={magicLinkEmail}
+                      onChange={(e) => setMagicLinkEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setShowMagicLink(false);
+                        setMagicLinkEmail('');
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="flex-1"
+                      onClick={handleMagicLink}
+                      disabled={isSubmitting || !magicLinkEmail}
+                    >
+                      {isSubmitting ? 'Sending...' : 'Send Magic Link'}
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               <OAuthButtons />
             </TabsContent>
