@@ -12,8 +12,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { PasswordStrengthMeter, isPasswordStrong } from '@/components/auth/PasswordStrengthMeter';
+import { TwoFactorSetup } from '@/components/auth/TwoFactorSetup';
+import { SessionManager } from '@/components/auth/SessionManager';
 import { toast } from 'sonner';
-import { User, Lock, Users, Crown, UserCheck, Eye, Trash2, Plus, Mail } from 'lucide-react';
+import { User, Lock, Users, Crown, UserCheck, Eye, Plus, Mail } from 'lucide-react';
 
 export default function ProfilePage() {
   const { user, profile, currentOrg, currentOrgRole, orgs } = useAuthContext();
@@ -233,7 +235,8 @@ export default function ProfilePage() {
         </TabsContent>
 
         {/* Security Tab */}
-        <TabsContent value="security">
+        <TabsContent value="security" className="space-y-6">
+          {/* Password Change */}
           <Card>
             <CardHeader>
               <CardTitle>Change Password</CardTitle>
@@ -277,6 +280,12 @@ export default function ProfilePage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Two-Factor Authentication */}
+          <TwoFactorSetup />
+
+          {/* Session Management */}
+          <SessionManager />
         </TabsContent>
 
         {/* Team Tab */}
