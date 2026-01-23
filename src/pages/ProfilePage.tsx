@@ -14,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { PasswordStrengthMeter, isPasswordStrong } from '@/components/auth/PasswordStrengthMeter';
 import { TwoFactorSetup } from '@/components/auth/TwoFactorSetup';
 import { SessionManager } from '@/components/auth/SessionManager';
+import { AccountDeletion } from '@/components/auth/AccountDeletion';
 import { toast } from 'sonner';
 import { User, Lock, Users, Crown, UserCheck, Eye, Plus, Mail } from 'lucide-react';
 
@@ -286,6 +287,9 @@ export default function ProfilePage() {
 
           {/* Session Management */}
           <SessionManager />
+
+          {/* Account Deletion */}
+          <AccountDeletion />
         </TabsContent>
 
         {/* Team Tab */}
